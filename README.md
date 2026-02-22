@@ -1,0 +1,1 @@
+Context Mirror is an application where users connect their data sources via MCP servers (like Health MCP for health, Calendar MCP for events, File MCP for journals), and the agent pulls context through those secure protocols to spot patterns, summarize trends (e.g., "late-night sessions followed by skincare"), and ask neutral questions like "What influences this rhythm".
