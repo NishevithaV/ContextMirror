@@ -1,0 +1,55 @@
+# Python 
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / TypeScript 
+node_modules/
+dist/
+.next/
+.expo/
+*.js.map
+
+# Environment & secrets (NEVER commit these) 
+.env
+.env.local
+.env.*.local
+*.pem
+credentials.json
+token.json
+
+# Databases & data files 
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# ML / model weights 
+*.bin
+*.safetensors
+*.gguf
+models/
+checkpoints/
+
+# macOS 
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDEs 
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Docker 
+.docker/

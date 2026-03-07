@@ -1,0 +1,261 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ContextMirror Unified Data Contract",
+  "description": "This is the shared contract between all MCP servers, the orchestrator, and the frontend. It defines the shape of the data for daily records, insights, and API responses.",
+  "version": "0.1.0",
+  "definitions": {
+    "TimeRange": {
+      "type": "object",
+      "required": ["start", "end"],
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 datetime string, e.g. 2025-01-01T00:00:00Z"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+
+    "HealthMetrics": {
+      "type": "object",
+      "description": "A single day's health snapshot from the Health MCP server",
+      "properties": {
+        "steps": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total steps taken that day"
+        },
+        "sleep_hours": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 24,
+          "description": "Total hours of sleep"
+        },
+        "sleep_quality": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "description": "Sleep quality score, 0-10 (if available)"
+        },
+        "heart_rate_avg": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Average resting heart rate in bpm"
+        },
+        "active_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Minutes of activity above resting threshold"
+        },
+        "calories_burned": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+
+    "CalendarEvent": {
+      "type": "object",
+      "required": ["id", "title", "start_time", "end_time", "status"],
+      "description": "A single calendar event from the Calendar MCP server",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "start_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end_time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["confirmed", "cancelled", "tentative"],
+          "description": "Whether the event was kept, cancelled, or is uncertain"
+        },
+        "category": {
+          "type": "string",
+          "description": "Optional tag: 'deep-work', 'meeting', 'personal', 'social', etc."
+        },
+        "attendee_count": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of attendees including the user"
+        },
+        "location": {
+          "type": "string"
+        }
+      }
+    },
+
+    "MessageSummary": {
+      "type": "object",
+      "required": ["chat_id", "date", "message_count_sent"],
+      "description": "Daily messaging summary per contact/chat from the WhatsApp MCP server",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "description": "Unique identifier for the chat (e.g. WhatsApp JID)"
+        },
+        "contact_name": {
+          "type": "string",
+          "description": "Display name of the contact or group"
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "The day this summary covers, e.g. 2025-01-15"
+        },
+        "message_count_sent": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "message_count_received": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "response_time_avg_seconds": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Average time in seconds between receiving a message and responding"
+        },
+        "active_hours": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 23
+          },
+          "description": "List of hours (0-23) when messages were sent"
+        },
+        "sentiment_score": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1,
+          "description": "Sentiment of messages sent: -1 (negative) to 1 (positive). Optional, from ML engine."
+        }
+      }
+    },
+
+    "DayRecord": {
+      "type": "object",
+      "required": ["date", "user_id"],
+      "description": "The unified snapshot of a single day across ALL data sources. The orchestrator assembles this by calling all 3 MCP servers.",
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "The day this record covers, e.g. 2025-01-15"
+        },
+        "user_id": {
+          "type": "string"
+        },
+        "health": {
+          "$ref": "#/definitions/HealthMetrics",
+          "description": "Populated by the Health MCP server"
+        },
+        "calendar_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CalendarEvent"
+          },
+          "description": "Populated by the Calendar MCP server"
+        },
+        "messaging": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MessageSummary"
+          },
+          "description": "Populated by the WhatsApp MCP server"
+        }
+      }
+    },
+
+    "PatternInsight": {
+      "type": "object",
+      "required": ["id", "type", "description", "confidence", "sources"],
+      "description": "A single pattern or insight generated by the ML engine. This is what gets shown on the frontend as a 'Reflect Card'.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["correlation", "trend", "anomaly", "cluster"],
+          "description": "correlation: two things move together. trend: something is changing over time. anomaly: something unusual happened. cluster: days that feel similar."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable summary of the pattern, e.g. 'On nights with < 6h sleep, you send 40% fewer messages the next morning'"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How statistically confident the ML engine is (0-1)"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["health", "calendar", "messaging"]
+          },
+          "description": "Which data sources contributed to this insight"
+        },
+        "date_range": {
+          "$ref": "#/definitions/TimeRange",
+          "description": "The time window this pattern was detected in"
+        },
+        "supporting_data": {
+          "type": "object",
+          "description": "Raw numbers the frontend can use for charts. Shape is flexible depending on insight type."
+        },
+        "reflection_question": {
+          "type": "string",
+          "description": "A neutral, open-ended question to show the user, e.g. 'What usually happens on your low-sleep nights?'"
+        }
+      }
+    },
+
+    "InsightResponse": {
+      "type": "object",
+      "required": ["user_id", "generated_at", "insights"],
+      "description": "The full response the orchestrator sends to the frontend. This is the top-level API response shape.",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "summary": {
+          "type": "string",
+          "description": "A 2-3 sentence narrative summary generated by the fine-tuned LLM"
+        },
+        "insights": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PatternInsight"
+          }
+        },
+        "timeline": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DayRecord"
+          },
+          "description": "The raw day-by-day data, used by the frontend timeline view"
+        }
+      }
+    }
+  }
+}

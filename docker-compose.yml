@@ -1,0 +1,95 @@
+version: "3.9"
+
+# Run everything with: docker-compose up --build
+
+# Services:
+#   calendar-mcp  — TypeScript MCP server  → port 3001
+#   whatsapp-mcp  — Python MCP server  → port 3002
+#   health-mcp    — Python MCP server  → port 3003
+#   orchestrator  — Python FastAPI  → port 8000
+#   ml-engine     — Python pattern engine → port 8001
+#
+# The frontend (React Native / Expo) runs on local machine with
+# `npm start` inside /frontend. It is NOT containerized.
+
+services:
+
+  # Calendar MCP Server 
+  calendar-mcp:
+    build: ./mcp-servers/calendar
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    networks:
+      - contextmirror-net
+
+  # WhatsApp MCP Server 
+  whatsapp-mcp:
+    build: ./mcp-servers/whatsapp
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+    volumes:
+      - whatsapp_data:/app/data   # WhatsApp SQLite DB lives here
+    networks:
+      - contextmirror-net
+
+  # Health MCP Server 
+  health-mcp:
+    build: ./mcp-servers/health
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+    volumes:
+      - health_data:/app/data     # Uploaded Apple Health XML / CSV lives here
+    networks:
+      - contextmirror-net
+
+  # Orchestrator 
+  # The "brain" MCP client that calls all 3 servers, runs the RAG pipeline,
+  # and exposes a REST API to the frontend.
+  orchestrator:
+    build: ./orchestrator
+    ports:
+      - "8000:8000"
+    environment:
+      - CALENDAR_MCP_URL=http://calendar-mcp:3001
+      - WHATSAPP_MCP_URL=http://whatsapp-mcp:3002
+      - HEALTH_MCP_URL=http://health-mcp:3003
+      - DATABASE_URL=sqlite:///./data/contextmirror.db
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - orchestrator_data:/app/data
+    depends_on:
+      - calendar-mcp
+      - whatsapp-mcp
+      - health-mcp
+    networks:
+      - contextmirror-net
+
+  # ML Engine 
+  ml-engine:
+    build: ./ml-engine
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+    volumes:
+      - ml_models:/app/models
+    networks:
+      - contextmirror-net
+
+networks:
+  contextmirror-net:
+    driver: bridge
+
+volumes:
+  whatsapp_data:
+  health_data:
+  orchestrator_data:
+  ml_models:
