@@ -1,0 +1,79 @@
+[project]
+name = "apple-health-mcp-server"
+version = "0.1.0"
+description = "MCP server for Apple Health data"
+requires-python = ">=3.13"
+dependencies = [
+    "chdb>=3.5.0",
+    "cryptography>=45",
+    "duckdb>=1.3.2",
+    "elasticsearch>=9.0",
+    "fastmcp>=2.10",
+    "greenlet>=3.2",
+    "httpx>=0.28",
+    "pandas>=2.3.2",
+    "passlib>=1.7",
+    "polars>=1.34.0",
+    "pydantic>=2.11",
+    "pydantic-settings>=2.10",
+    "testcontainers>=4.10",
+    "testcontainers-postgres>=0.0.1rc1",
+]
+
+[build-system]
+requires = ["uv_build"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+module-name = "app"
+
+[dependency-groups]
+dev = [
+    "fastapi>=0.116.2",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.0.0",
+    "pytest-cov>=6.2.1",
+]
+code-quality = [
+    "pre-commit>=4.3.0",
+    "ruff>=0.12.12",
+    "ty>=0.0.1a20",
+]
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "session"
+
+[tool.ty.src]
+exclude = ["./tests/", "./docs/", "./README.md"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+extend-exclude = ["tests/", "./docs/", "./README.md"]
+
+[tool.ruff.lint]
+select = [
+    "I",     # isort
+    "F",     # pyflakes
+    "FAST",  # FastApi
+    "ANN",   # flake8-annotations
+    "ASYNC", # flake8-async
+    "COM",   # flake8-commas
+    "T10",   # flake8-debugger
+    "PT",    # flake8-pytest-style
+    "RET",   # flake8-return
+    "SIM",   # flake8-simplify
+    "N",     # pep8-naming
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+]
+ignore = [
+    "ANN002", # missing-type-args
+    "ANN003", # missing-type-kwargs
+    "ANN204", # missing-return-type-special-method
+    "ANN401", # any-type
+]
+
+[project.scripts]
+start = "start:main"
