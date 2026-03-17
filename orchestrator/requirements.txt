@@ -1,0 +1,27 @@
+# Web framework
+fastapi==0.115.0          # The API framework. Chosen over Flask because it's async-native
+                          # (critical when you're waiting on 3 MCP servers simultaneously)
+                          # and it auto-generates OpenAPI docs at /docs.
+uvicorn[standard]==0.32.0 # ASGI server — the thing that actually runs FastAPI.
+                          # Think of FastAPI as the app, uvicorn as the web server.
+                          # [standard] includes websocket + hot-reload support.
+
+# Data validation
+pydantic==2.10.0          # How FastAPI validates request/response shapes. You define a
+                          # Python class, Pydantic ensures incoming JSON matches it.
+                          # Our models.py will mirror the types in shared/schema.json.
+pydantic-settings==2.6.0  # Lets you load settings from .env files into a typed Pydantic
+                          # class. Much cleaner than os.getenv() scattered everywhere.
+
+# MCP client
+mcp==1.3.0                # The official Anthropic MCP Python SDK. We use the client half
+                          # to connect to calendar-mcp, whatsapp-mcp, and health-mcp.
+httpx==0.28.0             # Async HTTP client. Used internally by the MCP SDK for SSE
+                          # connections. Also useful for any direct HTTP calls we need.
+
+# RAG pipeline (added later — stubs exist now)
+chromadb==0.6.0           # Vector database. Stores embeddings of weekly summaries so
+                          # the system can retrieve "weeks similar to this one".
+
+# Utilities
+python-dotenv==1.0.1      # Loads .env file into environment variables on startup.
