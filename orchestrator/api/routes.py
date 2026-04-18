@@ -7,7 +7,8 @@ from datetime import date, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.requests import Request
 
-from ..mcp_client.models import DayRecord, InsightResponse, PatternInsight
+from ..mcp_client.models import DayRecord, InsightResponse
+from ..auth.deps import get_current_user
 
 router = APIRouter(prefix="/api/v1")
 
@@ -29,7 +30,6 @@ async def health_check():
 
 @router.get("/timeline", response_model=list[DayRecord])
 async def get_timeline(
-    user_id: str = Query(..., description="User identifier"),
     start: date = Query(
         default_factory=lambda: date.today() - timedelta(days=30),
         description="Start date (default: 30 days ago)",
@@ -38,18 +38,17 @@ async def get_timeline(
         default_factory=date.today,
         description="End date (default: today)",
     ),
+    current_user: dict = Depends(get_current_user),
     mcp_client=Depends(get_mcp_client),
 ):
     """
-    Fetch the raw unified timeline for a user of one DayRecord per day.
-
-    The frontend uses this to render the scrollable timeline view.
-    Each DayRecord has health metrics, calendar events, and messaging
-    summaries for that day, all in one place.
+    Fetch the raw unified timeline — one DayRecord per day.
+    Requires a valid JWT in the Authorization header.
+    user_id is taken from the token, not the query string.
     """
     try:
         records = await mcp_client.fetch_day_records(
-            user_id=user_id,
+            user_id=current_user["id"],
             start=start.isoformat(),
             end=end.isoformat(),
         )
@@ -60,8 +59,8 @@ async def get_timeline(
 
 @router.get("/insights", response_model=InsightResponse)
 async def get_insights(
-    user_id: str = Query(...),
     days: int = Query(default=30, ge=7, le=90, description="How many days to analyze"),
+    current_user: dict = Depends(get_current_user),
     mcp_client=Depends(get_mcp_client),
 ):
     """
@@ -80,7 +79,7 @@ async def get_insights(
 
     try:
         timeline = await mcp_client.fetch_day_records(
-            user_id=user_id,
+            user_id=current_user["id"],
             start=start.isoformat(),
             end=end.isoformat(),
         )
@@ -88,11 +87,10 @@ async def get_insights(
         raise HTTPException(status_code=502, detail=f"MCP fetch failed: {e}")
 
     # TODO: pass timeline to ml-engine for real pattern detection
-    # For now, return the raw data so the frontend isn't blocked.
-    from datetime import datetime
+    from datetime import datetime, timezone
     return InsightResponse(
-        user_id=user_id,
-        generated_at=datetime.utcnow(),
+        user_id=current_user["id"],
+        generated_at=datetime.now(timezone.utc),
         summary="Pattern analysis coming soon. Data pipeline is connected.",
         insights=[],
         timeline=timeline,

@@ -23,5 +23,9 @@ httpx==0.28.0             # Async HTTP client. Used internally by the MCP SDK fo
 chromadb==0.6.0           # Vector database. Stores embeddings of weekly summaries so
                           # the system can retrieve "weeks similar to this one".
 
+# Authentication
+python-jose[cryptography]==3.3.0  # JWT creation and verification
+passlib[bcrypt]==1.7.4            # Password hashing
+
 # Utilities
 python-dotenv==1.0.1      # Loads .env file into environment variables on startup.

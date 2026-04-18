@@ -22,6 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from mcp_client.client import MCPClient
 from api.routes import router
+from auth.routes import router as auth_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -73,4 +74,5 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(router)
+app.include_router(auth_router)   # POST /auth/register, POST /auth/login
+app.include_router(router)        # GET /api/v1/timeline, GET /api/v1/insights
