@@ -1,72 +1,73 @@
-# Frontend — React Native (Expo)
+# React + TypeScript + Vite
 
-This is the mobile frontend for ContextMirror, built with [Expo](https://expo.dev) and React Native.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Prerequisites
+Currently, two official plugins are available:
 
-- [Node.js](https://nodejs.org/) (v18 or later)
-- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
-- A way to run the app — see the options below
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Setup
+## React Compiler
 
-1. Install dependencies
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-   ```bash
-   npm install
-   ```
+## Expanding the ESLint configuration
 
-2. Start the development server
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-   ```bash
-   npx expo start
-   ```
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-   This launches the Expo dev server and displays a QR code in your terminal.
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-## Running the app
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
 
-Choose whichever option works best for you:
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-### Option 1: On your physical phone (recommended for quick testing)
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-1. Install the **Expo Go** app on your phone:
-   - [Expo Go for iOS (App Store)](https://apps.apple.com/app/expo-go/id982107779)
-   - [Expo Go for Android (Google Play)](https://play.google.com/store/apps/details?id=host.exp.exponent)
-2. Run `npx expo start` and wait for the QR code to appear.
-3. **iOS:** Open the Camera app and point it at the QR code — tap the banner that appears.
-   **Android:** Open the Expo Go app and tap **Scan QR code**, then point it at the QR code.
-
-> Your phone and development machine must be on the **same Wi-Fi network**.
-
-### Option 2: iOS Simulator (macOS only)
-
-Requires Xcode (free from the Mac App Store).
-
-1. Install Xcode and open it at least once to accept the license agreement.
-2. Run `npx expo start`, then press `i` in the terminal to open the iOS Simulator automatically.
-
-See the [Expo iOS Simulator guide](https://docs.expo.dev/workflow/ios-simulator/) for detailed setup steps.
-
-### Option 3: Android Emulator
-
-Requires Android Studio.
-
-1. Install [Android Studio](https://developer.android.com/studio) and set up a virtual device (AVD).
-2. Run `npx expo start`, then press `a` in the terminal to open the Android Emulator automatically.
-
-See the [Expo Android Emulator guide](https://docs.expo.dev/workflow/android-studio-emulator/) for detailed setup steps.
-
-### Option 4: Web browser
-
-Press `w` in the terminal after running `npx expo start` to open the app in your browser. Note that some native features may not work in the browser.
-
-## Development
-
-Edit files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction), so each file in `app/` maps directly to a route.
-
-## Learn more
-
-- [Expo documentation](https://docs.expo.dev/)
-- [Expo Go overview](https://docs.expo.dev/get-started/expo-go/)
-- [File-based routing](https://docs.expo.dev/router/introduction/)
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
