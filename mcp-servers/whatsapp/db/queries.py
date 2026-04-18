@@ -14,7 +14,6 @@ overhead of an ORM layer.
 """
 
 import sqlite3
-from datetime import date
 
 
 def get_chats(conn: sqlite3.Connection) -> list[dict]:
