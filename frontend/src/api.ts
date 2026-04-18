@@ -1,8 +1,8 @@
 import type { InsightResponse } from "./types";
 import { mockInsights } from "./mock-insights";
+import { clearStoredAuth, getStoredToken } from "./auth/AuthContext";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "";
-const USER_ID = import.meta.env.VITE_USER_ID ?? "user-1";
 
 export interface FetchResult {
   data: InsightResponse[];
@@ -18,7 +18,7 @@ function toDateString(value: unknown): string {
 function normalize(raw: unknown): InsightResponse {
   const obj = raw as Partial<InsightResponse> & { generated_at?: string };
   return {
-    user_id: obj.user_id ?? USER_ID,
+    user_id: obj.user_id ?? "",
     generated_at: toDateString(obj.generated_at),
     summary: obj.summary ?? "",
     insights: Array.isArray(obj.insights) ? obj.insights : [],
@@ -31,16 +31,28 @@ export async function fetchInsights(): Promise<FetchResult> {
     return { data: mockInsights, source: "mock" };
   }
 
-  try {
-    const url = `${API_BASE}/api/v1/insights?user_id=${encodeURIComponent(
-      USER_ID
-    )}&days=7`;
-    const res = await fetch(url, {
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
+  const token = getStoredToken();
+  if (!token) {
+    // No token yet — show mock so UI isn't blank, but mark as mock.
+    return { data: mockInsights, source: "mock", error: "Not signed in" };
+  }
 
+  try {
+    const res = await fetch(`${API_BASE}/api/v1/insights?days=7`, {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (res.status === 401) {
+      // Token expired or invalid — clear and force a re-sign-in on next nav.
+      clearStoredAuth();
+      throw new Error("Session expired. Please sign in again.");
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const json = await res.json();
     const latest = normalize(json);
 
     const pastWeeks = mockInsights

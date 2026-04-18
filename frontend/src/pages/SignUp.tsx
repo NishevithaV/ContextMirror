@@ -10,13 +10,20 @@ export function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
-    await signUp(name, email, password);
-    setLoading(false);
-    nav("/");
+    setError(null);
+    try {
+      await signUp(name, email, password);
+      nav("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign-up failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -57,6 +64,11 @@ export function SignUp() {
           placeholder="At least 8 characters"
           required
         />
+        {error && (
+          <div className="text-danger text-xs bg-danger/10 border border-danger/30 rounded-md px-3 py-2">
+            {error}
+          </div>
+        )}
         <button
           type="submit"
           disabled={loading}
