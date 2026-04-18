@@ -1,0 +1,4 @@
+mcp[cli]==1.3.0      # MCP Python SDK. [cli] extra includes the `mcp` CLI tool for
+                     # testing server locally without needing a full client.
+uvicorn==0.32.0      # ASGI server — runs the FastMCP SSE transport over HTTP.
+python-dotenv==1.0.1 # Loads .env into os.environ on startup.
