@@ -1,4 +1,4 @@
-import type { InsightType, SourceKey } from "../types";
+import type { InsightType, DataSource } from "../types";
 
 export const insightStyles: Record<
   InsightType,
@@ -30,9 +30,8 @@ export const insightStyles: Record<
   },
 };
 
-export const sourceColors: Record<SourceKey, string> = {
+export const sourceColors: Record<DataSource, string> = {
   calendar: "#4F7CFF",
   health: "#10B981",
   messaging: "#A78BFA",
-  whatsapp: "#10B981",
 };

@@ -79,7 +79,7 @@ export function Home() {
           viz={
             <div className="flex items-center gap-2">
               <Dot color={sourceColors.calendar} />
-              <Dot color={sourceColors.whatsapp} />
+              <Dot color={sourceColors.messaging} />
               <Dot color="#3f3f46" />
             </div>
           }
@@ -225,11 +225,105 @@ function InsightCard({ insight }: { insight: PatternInsight }) {
         </div>
       </div>
       <p className="text-white text-sm leading-6">{insight.description}</p>
+      <SupportingChart insight={insight} />
       {insight.reflection_question && (
         <p className="text-text-muted text-sm italic leading-6 mt-2">
           {insight.reflection_question}
         </p>
       )}
+    </div>
+  );
+}
+
+function SupportingChart({ insight }: { insight: PatternInsight }) {
+  const data = insight.supporting_data;
+  if (!data) return null;
+  const style = insightStyles[insight.type];
+
+  // Trend shape: { weekly_avg: number[] } → sparkline
+  if (Array.isArray((data as { weekly_avg?: unknown }).weekly_avg)) {
+    const vals = (data as { weekly_avg: number[] }).weekly_avg;
+    return (
+      <div className="mt-3 flex items-center gap-3">
+        <Sparkline values={vals} color={style.accent} width={140} height={36} />
+        <span className="text-text-muted text-xs">
+          {vals[0]} → {vals[vals.length - 1]}
+        </span>
+      </div>
+    );
+  }
+
+  // Correlation shape: { series: [{ meetings, sleep_score }, ...] } → paired bars
+  const series = (data as { series?: unknown }).series;
+  if (Array.isArray(series) && series.length > 0) {
+    const rows = series as Array<Record<string, number>>;
+    const keys = Object.keys(rows[0]).slice(0, 2);
+    if (keys.length === 2) {
+      return (
+        <div className="mt-3">
+          <PairedBars rows={rows} keys={keys} accent={style.accent} />
+        </div>
+      );
+    }
+  }
+
+  return null;
+}
+
+function PairedBars({
+  rows,
+  keys,
+  accent,
+}: {
+  rows: Array<Record<string, number>>;
+  keys: string[];
+  accent: string;
+}) {
+  const [a, b] = keys;
+  const maxA = Math.max(...rows.map((r) => r[a])) || 1;
+  const maxB = Math.max(...rows.map((r) => r[b])) || 1;
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-end gap-1 h-10">
+        {rows.map((r, i) => (
+          <div key={i} className="flex-1 flex items-end gap-0.5">
+            <div
+              className="flex-1 rounded-sm"
+              style={{
+                height: `${(r[a] / maxA) * 100}%`,
+                backgroundColor: accent,
+                opacity: 0.85,
+              }}
+              title={`${a}: ${r[a]}`}
+            />
+            <div
+              className="flex-1 rounded-sm"
+              style={{
+                height: `${(r[b] / maxB) * 100}%`,
+                backgroundColor: "#10B981",
+                opacity: 0.55,
+              }}
+              title={`${b}: ${r[b]}`}
+            />
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-4 text-[10px] text-text-muted">
+        <span className="flex items-center gap-1">
+          <span
+            className="w-2 h-2 rounded-sm"
+            style={{ backgroundColor: accent, opacity: 0.85 }}
+          />
+          {a}
+        </span>
+        <span className="flex items-center gap-1">
+          <span
+            className="w-2 h-2 rounded-sm"
+            style={{ backgroundColor: "#10B981", opacity: 0.55 }}
+          />
+          {b}
+        </span>
+      </div>
     </div>
   );
 }

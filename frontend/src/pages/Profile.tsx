@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchInsights } from "../api";
-import type { InsightResponse, SourceKey } from "../types";
+import { useAuth } from "../auth/AuthContext";
+import type { InsightResponse, DataSource } from "../types";
 import { sourceColors } from "../lib/insight-style";
 
 const sources: {
-  key: SourceKey;
+  key: DataSource;
   name: string;
   description: string;
   connected: boolean;
@@ -16,7 +18,7 @@ const sources: {
     connected: true,
   },
   {
-    key: "whatsapp",
+    key: "messaging",
     name: "WhatsApp",
     description: "Message volume and cadence",
     connected: true,
@@ -30,25 +32,38 @@ const sources: {
 ];
 
 export function Profile() {
+  const { user, signOut } = useAuth();
+  const nav = useNavigate();
   const [weeks, setWeeks] = useState<InsightResponse[]>([]);
   useEffect(() => {
     fetchInsights().then((r) => setWeeks(r.data));
   }, []);
 
+  const initial = user?.name.charAt(0).toUpperCase() ?? "?";
+
   return (
     <div className="flex flex-col gap-10">
       <header className="flex items-center gap-5">
         <div className="w-14 h-14 rounded-full bg-elevated flex items-center justify-center text-xl font-medium border border-white/5">
-          J
+          {initial}
         </div>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-semibold tracking-tight text-white">
-            Julia
+            {user?.name ?? "Guest"}
           </h1>
           <p className="text-text-muted text-sm mt-0.5">
-            Manage your details and connected data sources.
+            {user?.email ?? "Manage your details and connected data sources."}
           </p>
         </div>
+        <button
+          onClick={() => {
+            signOut();
+            nav("/signin");
+          }}
+          className="text-xs text-danger border border-elevated rounded-md px-3 py-1.5 hover:bg-elevated transition-colors"
+        >
+          Sign out
+        </button>
       </header>
 
       <section>

@@ -22,6 +22,7 @@ function normalize(raw: unknown): InsightResponse {
     generated_at: toDateString(obj.generated_at),
     summary: obj.summary ?? "",
     insights: Array.isArray(obj.insights) ? obj.insights : [],
+    timeline: Array.isArray(obj.timeline) ? obj.timeline : undefined,
   };
 }
 
