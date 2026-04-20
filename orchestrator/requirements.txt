@@ -19,9 +19,8 @@ mcp==1.3.0                # The official Anthropic MCP Python SDK. We use the cl
 httpx==0.28.0             # Async HTTP client. Used internally by the MCP SDK for SSE
                           # connections. Also useful for any direct HTTP calls we need.
 
-# RAG pipeline (added later — stubs exist now)
-chromadb==0.6.0           # Vector database. Stores embeddings of weekly summaries so
-                          # the system can retrieve "weeks similar to this one".
+# RAG pipeline 
+chromadb[default]==0.6.0  # Vector database
 
 # Authentication
 python-jose[cryptography]==3.3.0  # JWT creation and verification
