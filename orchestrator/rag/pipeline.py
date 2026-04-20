@@ -8,8 +8,8 @@ from pathlib import Path
 import chromadb
 from chromadb.config import Settings
 
-from ..mcp_client.models import DayRecord
-from .embeddings import summarise_week, week_label_for_records
+from mcp_client.models import DayRecord
+from rag.embeddings import summarise_week, week_label_for_records
 
 logger = logging.getLogger(__name__)
 

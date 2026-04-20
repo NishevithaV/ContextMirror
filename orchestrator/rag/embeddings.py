@@ -5,7 +5,7 @@ that ChromaDB can embed and store.
 
 from statistics import mean, median
 
-from ..mcp_client.models import DayRecord
+from mcp_client.models import DayRecord
 
 
 def summarise_week(records: list[DayRecord], week_label: str) -> str:

@@ -7,9 +7,9 @@ from datetime import date, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.requests import Request
 
-from ..mcp_client.models import DayRecord, InsightResponse
-from ..auth.deps import get_current_user
-from ..rag.pipeline import RAGPipeline
+from mcp_client.models import DayRecord, InsightResponse
+from auth.deps import get_current_user
+from rag.pipeline import RAGPipeline
 
 router = APIRouter(prefix="/api/v1")
 
