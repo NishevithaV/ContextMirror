@@ -6,7 +6,7 @@ This is the FastAPI application. It does three things:
   2. While running: serves REST endpoints the frontend calls (via api/routes.py).
   3. On shutdown: gracefully closes all MCP connections.
 
-The startup/shutdown logic uses FastAPI's `lifespan` pattern — a single async
+The startup/shutdown logic uses FastAPI's `lifespan` pattern. a single async
 generator that yields once. Code before the yield runs on startup; code after
 runs on shutdown. 
 
@@ -21,6 +21,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from mcp_client.client import MCPClient
+from rag.pipeline import RAGPipeline
 from api.routes import router
 from auth.routes import router as auth_router
 
@@ -49,6 +50,7 @@ async def lifespan(app: FastAPI):
         logger.warning(f"MCP connection failed at startup: {e}")
 
     app.state.mcp_client = mcp_client
+    app.state.rag = RAGPipeline()
 
     yield  # <-- server is live here, handling requests
 

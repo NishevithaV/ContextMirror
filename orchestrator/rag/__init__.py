@@ -1,3 +1,4 @@
-# RAG pipeline stub for now.
-# It will use ChromaDB to store embeddings of weekly behavioral summaries
-# so the system can retrieve "weeks similar to this one" for context.
+from .pipeline import RAGPipeline
+from .embeddings import summarise_week, week_label_for_records
+
+__all__ = ["RAGPipeline", "summarise_week", "week_label_for_records"]

@@ -9,6 +9,7 @@ from fastapi.requests import Request
 
 from ..mcp_client.models import DayRecord, InsightResponse
 from ..auth.deps import get_current_user
+from ..rag.pipeline import RAGPipeline
 
 router = APIRouter(prefix="/api/v1")
 
@@ -19,6 +20,10 @@ router = APIRouter(prefix="/api/v1")
 
 def get_mcp_client(request: Request):
     return request.app.state.mcp_client
+
+
+def get_rag(request: Request) -> RAGPipeline:
+    return request.app.state.rag
 
 
 # Routes 
@@ -62,17 +67,17 @@ async def get_insights(
     days: int = Query(default=30, ge=7, le=90, description="How many days to analyze"),
     current_user: dict = Depends(get_current_user),
     mcp_client=Depends(get_mcp_client),
+    rag: RAGPipeline = Depends(get_rag),
 ):
     """
-    The main endpoint. Fetches data, runs pattern detection, returns insights.
+    The main endpoint. Fetches data, runs RAG retrieval, returns insights.
 
     Flow:
       1. Fetch DayRecords from all 3 MCP servers (via MCPClient)
-      2. Send to ML engine for pattern detection        
-      3. Run RAG to find similar historical weeks       
-      4. Return InsightResponse with insights + timeline
-
-    For now returns a stub response so the frontend can develop against it.
+      2. Store this week in ChromaDB (upsert)
+      3. Retrieve similar historical weeks via cosine similarity
+      4. TODO: pass timeline + similar_weeks to ML engine
+      5. Return InsightResponse
     """
     end = date.today()
     start = end - timedelta(days=days)
@@ -86,12 +91,29 @@ async def get_insights(
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"MCP fetch failed: {e}")
 
-    # TODO: pass timeline to ml-engine for real pattern detection
+    # Store this week and find similar past weeks
+    try:
+        rag.store_week(current_user["id"], timeline)
+        similar_weeks = rag.find_similar_weeks(current_user["id"], timeline)
+    except Exception as e:
+        # RAG failure is non-fatal, insights still work without historical context
+        similar_weeks = []
+
+    # TODO: pass timeline + similar_weeks to ml-engine for real pattern detection
     from datetime import datetime, timezone
+    summary = "Pattern analysis coming soon."
+    if similar_weeks:
+        top = similar_weeks[0]
+        summary = (
+            f"This week is most similar to {top['week']} "
+            f"(similarity: {top['similarity']:.0%}). "
+            "Full pattern analysis coming soon."
+        )
+
     return InsightResponse(
         user_id=current_user["id"],
         generated_at=datetime.now(timezone.utc),
-        summary="Pattern analysis coming soon. Data pipeline is connected.",
+        summary=summary,
         insights=[],
         timeline=timeline,
     )
