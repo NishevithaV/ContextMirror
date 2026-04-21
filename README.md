@@ -5,7 +5,7 @@ Users connect their personal data sources via MCP servers, and an agentic orches
 ## Architecture Overview
 
 ```
-frontend/          React Native (Expo)         
+frontend/          React + Vite (web)          
 mcp-servers/
   calendar/        Google Calendar MCP Server  
   whatsapp/        WhatsApp MCP Server         
@@ -25,6 +25,14 @@ Key types:
 - `DayRecord` - unified snapshot of one day (health + calendar + messaging)
 - `PatternInsight` - a pattern detected by the ML engine (correlation, trend, anomaly, cluster)
 - `InsightResponse` - what the orchestrator returns to the frontend
+
+## How It Works
+
+1. On each request, the orchestrator calls all three MCP servers in parallel
+2. Data is merged into a `DayRecord` per day, a unified snapshot of health, calendar, and messaging
+3. The RAG pipeline stores weekly summaries as embeddings in ChromaDB and retrieves similar past weeks
+4. The ML engine (locally fine-tuned Phi-3/Mistral) detects patterns and returns insights
+5. The frontend renders the timeline and surfaced correlations
 
 ## Running Locally
 
@@ -49,7 +57,8 @@ MCP references:
 
 ## Environment Variables
 
-| Variable           | Used by      | Description |
-| `GOOGLE_CLIENT_ID` | calendar-mcp | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | calendar-mcp | Google OAuth client secret |
-| `ANTHROPIC_API_KEY` | orchestrator | For LLM-powered insight generation |
+| Variable               | Used by      | Description                        |
+|------------------------|-------------|-------------------------------------|
+| `GOOGLE_CLIENT_ID`     | calendar-mcp | Google OAuth client ID             |
+| `GOOGLE_CLIENT_SECRET` | calendar-mcp | Google OAuth client secret         |
+| `JWT_SECRET_KEY`       | orchestrator | Secret for signing JWT tokens      |
