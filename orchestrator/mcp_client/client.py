@@ -189,19 +189,86 @@ class MCPClient:
     async def _fetch_health_metrics(
         self, start: str, end: str
     ) -> dict[str, HealthMetrics]:
+        """
+        Fetch daily health metrics from the Momentum Apple Health MCP server.
+
+        The health MCP server (mcp-servers/health) exposes tools from
+        DuckDB-backed Apple Health data.  We call get_trend_data_duckdb once
+        per metric type with interval="day" to get daily averages, then merge
+        all metric streams into a {date: HealthMetrics} dict.
+
+        HK type → HealthMetrics field mapping:
+          HKQuantityTypeIdentifierStepCount         → steps
+          HKCategoryTypeIdentifierSleepAnalysis     → sleep_hours  (value in hours)
+          HKQuantityTypeIdentifierHeartRate         → heart_rate_avg
+          HKQuantityTypeIdentifierActiveEnergyBurned → calories_burned
+          HKQuantityTypeIdentifierAppleExerciseTime → active_minutes
+
+        Tool contract (get_trend_data_duckdb):
+          Returns: list[{
+            "date": "YYYY-MM-DD",
+            "avg_value": float,
+            "total_value": float,
+            "count": int
+          }]
+        """
         if self._health_session is None:
             return {}
 
-        result = await self._health_session.call_tool(
-            "get_metrics",
-            {"types": ["steps", "sleep", "heart_rate"], "date_range": f"{start}/{end}"},
-        )
-        raw = self._parse_tool_result(result)
-        # Health server returns {date: {metric: value}} - convert to HealthMetrics
-        return {
-            date_str: HealthMetrics(**metrics)
-            for date_str, metrics in raw.get("by_date", {}).items()
-        }
+        import asyncio
+
+        # (hk_type, field_name, use_total_instead_of_avg)
+        # Steps and calories are cumulative; heart rate and sleep are averages.
+        metric_map: list[tuple[str, str, bool]] = [
+            ("HKQuantityTypeIdentifierStepCount", "steps", True),
+            ("HKCategoryTypeIdentifierSleepAnalysis", "sleep_hours", False),
+            ("HKQuantityTypeIdentifierHeartRate", "heart_rate_avg", False),
+            ("HKQuantityTypeIdentifierActiveEnergyBurned", "calories_burned", True),
+            ("HKQuantityTypeIdentifierAppleExerciseTime", "active_minutes", True),
+        ]
+
+        async def fetch_one(hk_type: str, use_total: bool) -> list[dict]:
+            try:
+                result = await self._health_session.call_tool(
+                    "get_trend_data_duckdb",
+                    {
+                        "record_type": hk_type,
+                        "interval": "day",
+                        "date_from": start,
+                        "date_to": end,
+                    },
+                )
+                # get_trend_data_duckdb returns a JSON list directly in text
+                import json as _json
+                content = result.content
+                if content and content[0].type == "text":
+                    rows = _json.loads(content[0].text)
+                    return rows if isinstance(rows, list) else []
+                return []
+            except Exception as exc:
+                logger.warning("Health MCP fetch failed for %s: %s", hk_type, exc)
+                return []
+
+        # Fire all 5 metric fetches concurrently
+        fetch_tasks = [fetch_one(hk_type, use_total) for hk_type, _, use_total in metric_map]
+        all_rows = await asyncio.gather(*fetch_tasks)
+
+        # Merge into {date: HealthMetrics}
+        by_date: dict[str, dict] = {}
+        for (hk_type, field_name, use_total), rows in zip(metric_map, all_rows):
+            for row in rows:
+                date_str = row.get("date", "")
+                if not date_str:
+                    continue
+                # Normalise to YYYY-MM-DD (DuckDB may return full timestamp)
+                date_str = str(date_str)[:10]
+                if date_str not in by_date:
+                    by_date[date_str] = {}
+                value = row.get("total_value" if use_total else "avg_value")
+                if value is not None:
+                    by_date[date_str][field_name] = round(float(value), 2)
+
+        return {date_str: HealthMetrics(**fields) for date_str, fields in by_date.items()}
 
     @staticmethod
     def _parse_tool_result(result) -> dict:
