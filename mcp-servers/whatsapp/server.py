@@ -37,16 +37,10 @@ logging.basicConfig(
 
 PORT = int(os.getenv("PORT", "3002"))
 
-# Create the FastMCP instance. The name is what shows up in MCP logs
-# and in the orchestrator's startup output when it calls list_tools().
 mcp = FastMCP("whatsapp-mcp")
 
-# Register all tools. Splitting into message tools and analytics tools
-# is just organization — to the MCP protocol they're all the same.
 register_message_tools(mcp)
 register_analytics_tools(mcp)
 
-# FastMCP exposes a .sse_app() method that returns a standard ASGI app
-# you can run with uvicorn. This gives us the /sse and /messages endpoints
-# the orchestrator's SSE client connects to.
-app = mcp.sse_app()
+if __name__ == "__main__":
+    mcp.run(transport="sse", host="0.0.0.0", port=PORT)
