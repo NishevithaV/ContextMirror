@@ -13,8 +13,8 @@ converting it to the MCP content block format automatically.
 import json
 from mcp.server.fastmcp import FastMCP
 
-from ..db.connection import get_connection
-from ..db import queries
+from db.connection import get_connection
+from db import queries
 
 
 def register_message_tools(mcp: FastMCP) -> None:

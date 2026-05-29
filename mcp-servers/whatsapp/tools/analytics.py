@@ -15,8 +15,8 @@ import json
 import statistics
 from mcp.server.fastmcp import FastMCP
 
-from ..db.connection import get_connection
-from ..db import queries
+from db.connection import get_connection
+from db import queries
 
 
 def register_analytics_tools(mcp: FastMCP) -> None:

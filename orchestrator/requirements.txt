@@ -7,7 +7,7 @@ uvicorn[standard]==0.32.0 # ASGI server — the thing that actually runs FastAPI
                           # [standard] includes websocket + hot-reload support.
 
 # Data validation
-pydantic==2.8.2           # How FastAPI validates request/response shapes. You define a
+pydantic[email]==2.8.2    # How FastAPI validates request/response shapes. You define a
                           # Python class, Pydantic ensures incoming JSON matches it.
                           # Pinned to 2.8.x — mcp==1.3.0 breaks with pydantic 2.9+
                           # (AnyUrl host_required constraint changed).
