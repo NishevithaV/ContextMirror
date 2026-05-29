@@ -26,6 +26,8 @@ dist/
 *.pem
 credentials.json
 token.json
+gcp-oauth.keys.json
+tokens.json
 
 # Databases & data files 
 *.db
