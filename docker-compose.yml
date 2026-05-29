@@ -62,7 +62,7 @@ services:
       - WHATSAPP_MCP_URL=http://whatsapp-mcp:3002
       - HEALTH_MCP_URL=http://health-mcp:3003
       - DATABASE_URL=sqlite:///./data/contextmirror.db
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
     volumes:
       - orchestrator_data:/app/data
     depends_on:

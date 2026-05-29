@@ -53,10 +53,10 @@ def summarise_week(records: list[DayRecord], week_label: str) -> str:
         )
 
     # Messaging
-    all_summaries = [s for r in records for s in (r.message_summaries or [])]
+    all_summaries = [s for r in records for s in (r.messaging or [])]
     if all_summaries:
-        total_sent = sum(s.sent for s in all_summaries)
-        total_received = sum(s.received for s in all_summaries)
+        total_sent = sum(s.message_count_sent for s in all_summaries)
+        total_received = sum(s.message_count_received for s in all_summaries)
         contact_set = {s.contact_name for s in all_summaries}
         lines.append(
             f"Messages: sent {total_sent}, received {total_received} "

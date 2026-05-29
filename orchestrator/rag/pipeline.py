@@ -85,7 +85,7 @@ class RAGPipeline:
         )
 
         results = []
-        for i, doc_id in enumerate(raw["ids"][0]):
+        for i, _ in enumerate(raw["ids"][0]):
             week = raw["metadatas"][0][i]["week"]
             if week == current_week:
                 continue  # skip self-match

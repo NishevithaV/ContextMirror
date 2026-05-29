@@ -103,7 +103,7 @@ def register_message_tools(mcp: FastMCP) -> None:
                 )
                 summaries.append({
                     "date": row["day"],
-                    "chat_jid": row["chat_jid"],
+                    "chat_id": row["chat_jid"],
                     "contact_name": row["chat_name"],
                     "message_count_sent": row["sent"],
                     "message_count_received": row["received"],
