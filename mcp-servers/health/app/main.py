@@ -11,4 +11,4 @@ mcp = FastMCP(settings.PROJECT_NAME)
 mcp.mount(mcp_router)
 
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run(transport="sse", host="0.0.0.0", port=3003)

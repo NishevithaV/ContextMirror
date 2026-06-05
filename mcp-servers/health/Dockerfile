@@ -1,21 +1,3 @@
-FROM python:3.13-slim AS builder
-RUN apt-get update && \
-  apt-get install -y --no-install-recommends build-essential libpq-dev && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/*
-RUN pip install --no-cache-dir --upgrade pyopenssl
-
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-WORKDIR /root_project
-
-COPY uv.lock pyproject.toml ./
-COPY . .
-
-RUN uv venv /root_project/.venv
-ENV PATH="/root_project/.venv/bin:$PATH"
-RUN uv sync --frozen --no-dev
-
 FROM python:3.13-slim
 
 RUN apt-get update && \
@@ -23,12 +5,20 @@ RUN apt-get update && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/*
 
-WORKDIR /root_project
-
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-COPY --from=builder /root_project /root_project
+WORKDIR /root_project
 
-EXPOSE 8000
+# Install dependencies first (separate layer — only re-runs when lock/pyproject change)
+COPY uv.lock pyproject.toml ./
+RUN uv sync --frozen --no-dev --no-install-project
 
-CMD ["uv", "run", "python", "start.py"]
+# Now copy source and install the project itself
+COPY . .
+RUN uv sync --frozen --no-dev
+
+ENV PATH="/root_project/.venv/bin:$PATH"
+
+EXPOSE 3003
+
+CMD ["python", "app/main.py"]

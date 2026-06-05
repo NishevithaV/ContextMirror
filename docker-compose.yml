@@ -15,12 +15,13 @@ services:
   # Calendar MCP Server 
   calendar-mcp:
     build: ./mcp-servers/calendar
+    user: "1000:1000"
+    command: ["node", "build/index.js", "start", "--transport", "http", "--host", "0.0.0.0", "--port", "3001"]
     ports:
       - "3001:3001"
-    environment:
-      - PORT=3001
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+    volumes:
+      - ./gcp-oauth.keys.json:/app/gcp-oauth.keys.json
+      - /home/ezekiel/.config/google-calendar-mcp/tokens.json:/home/node/.config/google-calendar-mcp/tokens.json
     networks:
       - contextmirror-net
 
@@ -44,7 +45,7 @@ services:
     environment:
       - PORT=3003
     volumes:
-      - health_data:/app/data     # Uploaded Apple Health XML / CSV lives here
+      - ./mcp-servers/health/applehealth.duckdb:/root_project/applehealth.duckdb # Uploaded Apple Health XML / CSV lives here
     networks:
       - contextmirror-net
 

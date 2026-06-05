@@ -17,8 +17,7 @@ def main() -> None:
         "run",
         "--directory",
         str(project_dir),
-        "fastmcp",
-        "run",
+        "python",
         "app/main.py",
     ]
 

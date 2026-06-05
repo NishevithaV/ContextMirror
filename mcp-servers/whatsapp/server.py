@@ -43,4 +43,4 @@ register_message_tools(mcp)
 register_analytics_tools(mcp)
 
 if __name__ == "__main__":
-    mcp.run(transport="sse", host="0.0.0.0", port=PORT)
+    mcp.run(transport="sse")
